@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="et">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pakkumuste töölaud</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <aside class="sidebar">
+      <a class="brand" href="#" aria-label="Needwork avaleht">
+        <span class="brand-mark">N</span>
+        <span>Needwork</span>
+      </a>
+
+      <nav class="main-nav" aria-label="Peamenüü">
+        <p class="nav-label">Tööruum</p>
+        <a class="nav-item active" href="#">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h5v8H3V6a1 1 0 0 1 1-1Zm9-2h5a2 2 0 0 1 2 2v6h-7V3ZM3 13h8v8H6a3 3 0 0 1-3-3v-5Zm10 0h7v5a3 3 0 0 1-3 3h-4v-8Z"/></svg>
+          Ülevaade
+        </a>
+        <a class="nav-item" href="#">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.5h7l4 4V20a1 1 0 0 1-1 1H7a2 2 0 0 1-2-2V5.5a2 2 0 0 1 2-2Z"/><path d="M14 3.5v4h4M8.5 12h6M8.5 16h6"/></svg>
+          Pakkumused
+          <span class="nav-count">8</span>
+        </a>
+        <a class="nav-item" href="#">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7.5h16v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-11Z"/><path d="M8 7.5v-2a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 11h18"/></svg>
+          Hanked
+          <span class="nav-count">24</span>
+        </a>
+        <a class="nav-item" href="#">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="m9 12 2 2 4-5"/></svg>
+          Metoodikad
+        </a>
+
+        <p class="nav-label second">Teadmised</p>
+        <a class="nav-item" href="#">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v6c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></svg>
+          Info lake
+        </a>
+        <a class="nav-item" href="#">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2"/><path d="M3.5 20c.3-4 2.1-6 5.5-6s5.2 2 5.5 6M15 14c3.2-.2 4.8 1.5 5.1 4.5"/></svg>
+          Spetsialistid
+        </a>
+      </nav>
+
+      <div class="sidebar-bottom">
+        <div class="ai-mini-card">
+          <div class="sparkle">✦</div>
+          <div><strong>AI teadmistebaas</strong><span>Viimati õpitud täna</span></div>
+          <span class="status-dot"></span>
+        </div>
+        <div class="profile">
+          <div class="avatar">MK</div>
+          <div><strong>Maarja Kask</strong><span>Projektijuht</span></div>
+          <button aria-label="Ava kasutajamenüü">•••</button>
+        </div>
+      </div>
+    </aside>
+
+    <main>
+      <header class="topbar">
+        <div class="breadcrumb"><span>Pakkumused</span><b>/</b><strong id="breadcrumbTenderTitle">Transpordiameti iseteenindus</strong></div>
+        <div class="top-actions">
+          <button class="icon-btn" aria-label="Teavitused">
+            <svg viewBox="0 0 24 24"><path d="M6 9a6 6 0 0 1 12 0c0 7 3 7 3 8H3c0-1 3-1 3-8ZM10 21h4"/></svg>
+            <i></i>
+          </button>
+          <button class="ghost-btn">Salvesta mustand</button>
+          <button class="export-top">⇩ Ekspordi</button>
+          <button class="primary-btn">Saada kinnitamisele <span>→</span></button>
+        </div>
+      </header>
+
+      <div class="page-shell">
+        <section class="proposal-head">
+          <div>
+            <div class="eyebrow-row"><span class="status-badge">Töös</span><span>TA-2026-048</span><span class="dot-sep"></span><span id="tenderDeadlineShort">Esitamine 18. august kell 11:00</span></div>
+            <h1 id="tenderTitle">Transpordiameti iseteeninduse<br />uuendamine</h1>
+            <p>AI koostatud pakkumuse hindamine ja täpsustamine</p>
+          </div>
+          <div class="head-metrics">
+            <div class="metric-ring" style="--score: 82"><span>82<small>%</small></span></div>
+            <div><strong>Vastavusskoor</strong><span id="requirementsSummary">12 nõuet 14-st kaetud</span><a href="#requirements">Vaata puudusi →</a></div>
+          </div>
+        </section>
+
+        <section class="deadline-banner" aria-label="Pakkumuse esitamise tähtaeg">
+          <div class="deadline-icon"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg></div>
+          <div class="deadline-main"><span>PAKKUMUSE ESITAMISE TÄHTAEG</span><strong id="tenderDeadline">Teisipäev, 18. august 2026 <b>kell 11:00</b></strong><small>Riigihangete registris · hilisem esitamine ei ole võimalik</small></div>
+          <div class="countdown"><span>AEGA JÄÄNUD</span><div><strong>6</strong><small>päeva</small><strong>04</strong><small>tundi</small><strong>28</strong><small>min</small></div></div>
+          <div class="deadline-health"><i></i><div><strong>Graafikus</strong><span>2 sisemist tähtaega täna</span></div></div>
+        </section>
+
+        <div class="tabs" role="tablist">
+          <button class="tab active">Töölaud</button>
+          <button class="tab">Pakkumuse skelett <span id="proposalSkeletonCount">6</span></button>
+          <button class="tab">Metoodikad <span id="methodologiesCount">14</span></button>
+          <button class="tab">Nõuded <span id="requirementsCount">14</span></button>
+          <button class="tab">Meeskond <span id="teamRolesCount">7</span></button>
+          <button class="tab">Kinnitamine</button>
+        </div>
+
+        <section class="workspace-grid">
+          <div class="content-column">
+            <section class="skeleton-section">
+              <div class="section-heading">
+                <div><span class="tiny-label">PAKKUMUSE SKELETT</span><h2>Struktuur ja ülevaatuse staatus</h2><p>Iga peatükk näitab vastutajat ja kaetud hankenõudeid.</p></div>
+                <button class="outline-small">Ava täisvaade ↗</button>
+              </div>
+              <div class="skeleton-card">
+                <div class="skeleton-progress"><div><strong id="skeletonProgressText">4 / 6</strong><span>peatükki üle vaadatud</span></div><div class="bar"><i id="skeletonProgressBar" style="width:66%"></i></div><span>2 peatükki ootavad spetsialisti hinnangut</span></div>
+                <div class="skeleton-flow" id="proposalSkeletonList">
+                  <div class="chapter done"><div class="chapter-order">01</div><strong>Lähtekoht ja eesmärgid</strong><span class="chapter-owner"><i>MK</i> Maarja</span><div class="chapter-meta"><span class="req-links">N-01 · N-03</span><span class="task-deadline done-date">12. aug · tehtud</span></div><b>✓</b></div>
+                  <div class="flow-line"></div>
+                  <div class="chapter done"><div class="chapter-order">02</div><strong>Teenusedisain ja uuringud</strong><span class="chapter-owner"><i>LP</i> Liis</span><div class="chapter-meta"><span class="req-links">N-02 · N-05 · N-08</span><span class="task-deadline">13. aug · 15:00</span></div><b>✓</b></div>
+                  <div class="flow-line"></div>
+                  <div class="chapter current"><div class="chapter-order">03</div><strong>UX/UI disain</strong><span class="chapter-owner"><i>KT</i> Kristi</span><div class="chapter-meta"><span class="req-links">N-04 · N-06</span><span class="task-deadline today">Täna · 17:00</span></div><b>•••</b></div>
+                  <div class="flow-line"></div>
+                  <div class="chapter waiting"><div class="chapter-order">04</div><strong>Tehniline lahendus</strong><span class="chapter-owner"><i>RS</i> Rasmus</span><div class="chapter-meta"><span class="req-links missing">N-11 katmata</span><span class="task-deadline">15. aug · 12:00</span></div><b>!</b></div>
+                  <div class="flow-line"></div>
+                  <div class="chapter done"><div class="chapter-order">05</div><strong>Projekti juhtimine</strong><span class="chapter-owner"><i>MK</i> Maarja</span><div class="chapter-meta"><span class="req-links">N-07 · N-09</span><span class="task-deadline">16. aug · 14:00</span></div><b>✓</b></div>
+                  <div class="flow-line"></div>
+                  <div class="chapter done"><div class="chapter-order">06</div><strong>Riskid ja kvaliteet</strong><span class="chapter-owner"><i>MK</i> Maarja</span><div class="chapter-meta"><span class="req-links">N-10 · N-12</span><span class="task-deadline">17. aug · 12:00</span></div><b>✓</b></div>
+                </div>
+              </div>
+            </section>
+
+            <div class="section-heading">
+              <div><h2>Metoodikad ja töömaht</h2><p>Vaata üle AI soovitused ning kohanda oma rolli hinnanguid.</p></div>
+              <div class="legend"><span><i class="ai-dot"></i> AI soovitus</span><span><i class="edited-dot"></i> Muudetud</span></div>
+            </div>
+
+            <article class="method-card expanded detail-method">
+              <div class="role-stripe service"></div>
+              <div class="method-main">
+                <div class="method-top">
+                  <div class="role-icon service">SD</div>
+                  <div><div class="role-line"><h3 id="methodologyName0">Persoonade loomine ja kooskõlastamine</h3><span class="review-pill">Üle vaadatud</span></div><p>Vastutaja: <strong>Liis Pärn</strong> · Teenusedisainer <span class="inline-deadline">Tähtaeg 13. aug · 15:00</span></p></div>
+                  <button class="more-btn">•••</button>
+                </div>
+
+                <div class="ai-reason"><span>✦</span><p><strong>AI loodud kirjeldus</strong> Koostatud hanke alusdokumentide ja 9 sarnase pakkumuse põhjal.</p><button>Genereeri uuesti</button></div>
+
+                <div class="method-description">
+                  <p id="methodologyDescription0">Eelnevate uuringute põhjal tuvastame erinevad kasutajatüübid. Loome kokku kuni 4 persoonat, kirjeldades nende omadusi, eesmärke, harjumusi, ootusi ja murekohti. Persoonadele anname nimed, portreepildid ja tsitaadid, et anda neile isikupära ning muuta need meeldejäävaks.</p>
+                  <p id="methodologyDescriptionContinuation0">Iga persoona kirjeldus mahutatakse ühele A4 lehele. Persoonad kooskõlastame tellijaga ja kohandame neid saadud tagasiside põhjal.</p>
+                  <div class="deliverables-grid">
+                    <div><strong>Tellija panus</strong><ul id="methodologyClientInput0"><li>Uuringutulemuste koosolekul osalemine</li><li>Persoonadele tagasiside andmine</li></ul></div>
+                    <div><strong>Valmivad töötulemid</strong><ul id="methodologyDeliverables0"><li>Intervjuude peamiste tulemuste loetelu</li><li>Persoonad, kuni 4 tk</li></ul></div>
+                  </div>
+                  <div class="previous-copy"><div><span>VARASEM SARNANE TEKST</span><strong>eesti.ee teenuste uuendus · 2024</strong></div><p>“Loome uuringu põhjal neli peamist kasutajapersoonat...”</p><button>Sirvi 1 / 6&nbsp;&nbsp; ‹ &nbsp;›</button></div>
+                </div>
+              </div>
+              <div class="method-total detailed-total"><span>Sinu hinnang</span><div class="stepper changed"><button type="button" data-step="-1">−</button><input class="hours-input" aria-label="Persoonade loomise tunnid" value="40" inputmode="numeric" /><span>h</span><button type="button" data-step="1">+</button></div><small>AI soovitus <b>36 h</b></small><small>Sarnaste keskmine <b>42 h</b></small><div class="delta">↑ 4 h AI hinnangust</div><span class="requirement-tag" id="methodologyRequirements0">Katab N-05</span></div>
+            </article>
+
+            <article class="method-card compact">
+              <div class="role-stripe service"></div>
+              <div class="role-icon ui">UI</div>
+              <div class="compact-copy"><div class="role-line"><h3 id="methodologyName1">Prototüüpimine ja visuaalne disain</h3><span class="role-pill">Sinu osa</span></div><p>Vastutaja: <strong>Kristi Tamm</strong> · UI disainer <span class="inline-deadline urgent">Täna · 17:00</span></p><div class="chips"><span>Prototüüp</span><span>24 põhivaadet</span><span id="methodologyRequirements1">N-04 · N-06</span></div></div>
+              <div class="compact-hours"><span>Sinu hinnang</span><div class="mini-stepper"><button type="button" data-step="-1">−</button><input class="hours-input" aria-label="UI disaini tunnid" value="124" inputmode="numeric" /><small>h</small><button type="button" data-step="1">+</button></div><small>AI soovitus 116 h</small></div>
+              <button class="chevron">⌄</button>
+            </article>
+
+            <article class="method-card compact">
+              <div class="role-stripe tech"></div>
+              <div class="role-icon tech">TA</div>
+              <div class="compact-copy"><div class="role-line"><h3 id="methodologyName2">Tehniline analüüs</h3><span class="waiting-pill">Ootab hinnangut</span></div><p>Vastutaja: <strong>Rasmus Saar</strong> · Tehniline arhitekt <span class="inline-deadline">15. aug · 12:00</span></p><div class="chips"><span>Arhitektuur</span><span>Integratsioonid</span><span id="methodologyRequirements2">Turvalisus</span></div></div>
+              <div class="compact-hours"><span>AI hinnang</span><div class="mini-stepper"><button type="button" data-step="-1">−</button><input class="hours-input" aria-label="Tehnilise analüüsi tunnid" value="120" inputmode="numeric" /><small>h</small><button type="button" data-step="1">+</button></div><small>Pole kinnitatud</small></div>
+              <button class="chevron">⌄</button>
+            </article>
+
+            <section class="data-lake">
+              <div class="lake-head">
+                <div><span class="tiny-label">TOETAV INFO LAKE</span><h2>Mineviku pakkumused</h2><p>Sarnased tööd, mille tulemustest AI praeguse hinnangu koostas.</p></div>
+                <button class="ghost-btn">Halda andmeid →</button>
+              </div>
+              <div class="learning-cards">
+                <div><span>Keskmine eelarve täpsus</span><strong>−4,8%</strong><small>Planeeritust rohkem tunde</small></div>
+                <div><span>Hindamise tugevus</span><strong>Metoodika</strong><small>Keskmiselt 92% punktidest</small></div>
+                <div class="attention"><span>Vajab tähelepanu</span><strong>Riskikäsitlus</strong><small>Kaotatud keskmiselt 8 p</small></div>
+              </div>
+              <div class="lake-table rich">
+                <div class="lake-row lake-header"><span>Pakkumus / hanke tüüp</span><span>Sarnasus</span><span>Maht plaan / tegelik</span><span>Esitatud → teostas</span><span>Hinne</span></div>
+                <div class="lake-row"><span><b>MKM iseteeninduse disain</b><small>Avatud menetlus · 2025</small></span><span><em class="similarity">92%</em></span><span><b>1 180 → 1 246 h</b><small class="bad-text">Eelarve +5,6%</small></span><span><b>KT, LP, RS → KT, LP, AV</b><small>1 spetsialist muutus</small></span><span><b>87 / 100</b><small class="bad-text">−6 p riskides</small></span></div>
+                <div class="lake-row"><span><b>eesti.ee teenuste uuendus</b><small>Raamleping · 2024</small></span><span><em class="similarity">87%</em></span><span><b>920 → 884 h</b><small class="good-text">Eelarves −3,9%</small></span><span><b>LP, KT, AV → samad</b><small>Meeskond ei muutunud</small></span><span><b>94 / 100</b><small class="good-text">Parim: metoodika</small></span></div>
+                <div class="lake-row"><span><b>Terviseportaali UX/UI</b><small>Avatud menetlus · 2025</small></span><span><em class="similarity">79%</em></span><span><b>1 340 → 1 512 h</b><small class="bad-text">Eelarve +12,8%</small></span><span><b>KT, RS → KT, RS, AV</b><small>1 spetsialist lisandus</small></span><span><b>81 / 100</b><small class="bad-text">−9 p ajakavas</small></span></div>
+              </div>
+            </section>
+          </div>
+
+          <aside class="insight-column">
+            <div class="summary-card">
+              <div class="card-title"><h3>Pakkumuse kokkuvõte</h3><span class="live-dot">Uuendatud</span></div>
+              <div class="big-hours"><span>Hinnanguline töömaht</span><strong><span id="totalHours">1 248</span> <small>h</small></strong><div class="comparison"><span>AI algne</span><b>1 186 h</b><em id="hoursDelta">+5,2%</em></div></div>
+              <div class="price-calculator">
+                <label for="hourlyRate"><span>Tunnihind <small>km-ta</small></span><div><input id="hourlyRate" value="100" inputmode="decimal" /><b>€ / h</b></div></label>
+                <div class="price-result"><span>Projekti lõpphind <small>km-ta</small></span><strong id="totalPrice">124 800 €</strong></div>
+              </div>
+              <div class="budget-progress"><div><span>Eelarve kasutus</span><strong id="budgetUse">78%</strong></div><div class="bar"><i id="budgetBar"></i></div><p><span id="budgetAmount">€124 800</span> / €160 000</p></div>
+              <div class="stat-pair"><div><span>Metoodikaid</span><strong id="methodologiesTotal">14</strong><small>2 muudetud</small></div><div><span>Hindajaid</span><strong>4 / 6</strong><small>2 ootavad</small></div></div>
+            </div>
+
+            <div class="risk-card">
+              <div class="card-title"><h3>Riskid</h3><span class="risk-count" id="risksCount">3</span></div>
+              <div id="riskItems">
+                <div class="risk-item high"><i>!</i><div><strong>Integratsioonide maht ebaselge</strong><p>Hankedokumendid viitavad 8 süsteemile, kuid kirjeldatud on 5.</p><span class="mitigation"><b>Maandamine:</b> täpsustame liidesed avakoosolekul ja hoiame 15% puhvrit.</span><a href="#">Vaata nõuet →</a></div></div>
+                <div class="risk-item medium"><i>!</i><div><strong>Projektijuhi koormus</strong><p>Kuuekuuline fikseeritud hinnaga projekt vajab vähemalt 0,3 koormust.</p><span class="mitigation"><b>Maandamine:</b> määrame asendusjuhi ja iganädalase riskikoosoleku.</span></div></div>
+                <div class="risk-item low"><i>i</i><div><strong>Kasutajate värbamine</strong><p>Ajaplaanis puudub tellija kinnitus värbamisele.</p></div></div>
+              </div>
+              <button class="risk-button">＋ Lisa risk</button>
+            </div>
+
+            <div class="ai-note-card">
+              <div class="sparkle large">✦</div>
+              <div><strong>AI tähelepanek</strong><p id="aiObservation">Varasemates sarnastes töödes alahinnati integratsioonide analüüsi keskmiselt <b>14%</b>.</p><button>Rakenda soovitus</button></div>
+            </div>
+
+            <div class="approval-card">
+              <div class="card-title"><h3>Kinnitamise rada</h3><span class="approval-status">2 kinnitajat</span></div>
+              <p class="approval-rule"><span id="approvalPrice">€124 800</span> · fikseeritud põhiosa · 7 kuud</p>
+              <div class="approval-person done"><span>✓</span><div><strong>Valdkonnajuht</strong><small>Helen Vaher · kinnitatud</small></div></div>
+              <div class="approval-person pending"><span>2</span><div><strong>Tegevjuht</strong><small>Vajalik: hind üle €120 000 või kestus üle 12 kuu</small></div></div>
+              <label class="responsibility-option"><input type="checkbox" /><span><b>Valdkonnajuht võtab mahuhinnangu eest vastutuse</b><small>Kasuta ainult juhul, kui tegevjuht pole kättesaadav.</small></span></label>
+              <div class="rule-hint"><b>Reegel</b><span>Üle €40k või üle 6 kuu → valdkonnajuht<br />Üle €120k või üle 12 kuu → kaasa tegevjuht*</span></div>
+              <button class="primary-wide">Saada tegevjuhile</button>
+            </div>
+
+            <div class="export-card">
+              <div class="card-title"><h3>Ekspordi pakkumus</h3></div>
+              <button><span class="file-icon excel">X</span><div><strong>Excel · minimaalne</strong><small>Tööd, tunnid ja kestus</small></div><b>↓</b></button>
+              <button><span class="file-icon excel">X</span><div><strong>Excel · täielik</strong><small>Lisaks inimesed ja vastutused</small></div><b>↓</b></button>
+              <button><span class="file-icon word">W</span><div><strong>Word · pakkumuse dokument</strong><small>Metoodikad, kirjeldused ja kestused</small></div><b>↓</b></button>
+            </div>
+          </aside>
+        </section>
+      </div>
+    </main>
+    <script src="mock-data.js"></script>
+    <script src="script.js"></script>
+  </body>
+</html>

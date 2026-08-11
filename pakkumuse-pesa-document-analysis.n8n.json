@@ -1,0 +1,586 @@
+{
+  "name": "Pakkumuse Pesa - Document Analysis",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "69a2dcad-92c3-4657-baa8-5849ac525b33",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [-1160, 260]
+    },
+    {
+      "parameters": {
+        "operation": "read",
+        "fileSelector": "/home/node/.n8n-files/testhange/HD/**/*.{pdf,docx,xml}",
+        "options": {
+          "dataPropertyName": "data"
+        }
+      },
+      "id": "cfc49c0a-6abc-44d0-9ce8-49cd21b034bb",
+      "name": "Read All Supported Files",
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [-940, 260]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const items = $input.all();\n\nreturn items.map((item, index) => {\n  const binaryData = item.binary?.data;\n  const filename = String(item.json.fileName || binaryData?.fileName || '');\n  const extension = String(\n    item.json.fileExtension ||\n    binaryData?.fileExtension ||\n    filename.split('.').pop() ||\n    ''\n  ).toLowerCase();\n\n  return {\n    json: { ...item.json, filename, extension },\n    binary: item.binary,\n    pairedItem: { item: index },\n  };\n});"
+      },
+      "id": "fe2492a1-d295-474a-93df-82e43cfd9876",
+      "name": "Detect Extension",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-700, 260]
+    },
+    {
+      "parameters": {
+        "mode": "expression",
+        "numberOutputs": 3,
+        "output": "={{ $json.extension === 'pdf' ? 0 : $json.extension === 'xml' ? 1 : 2 }}"
+      },
+      "id": "46977a0e-e14a-46ae-a883-d7cb2c574077",
+      "name": "Switch by File Type",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [-460, 260]
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "binaryPropertyName": "data",
+        "options": {
+          "joinPages": true,
+          "keepSource": "json",
+          "maxPages": 0
+        }
+      },
+      "id": "35223108-f6c6-4ec2-b0b7-a6ed672e25c4",
+      "name": "Extract PDF",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [-180, 20]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "return $input.all().map((item) => {\n  const value = item.json.text;\n  const text = Array.isArray(value) ? value.join('\\n') : String(value ?? '');\n\n  return {\n    json: {\n      filename: String(item.json.filename || item.json.fileName || ''),\n      extension: 'pdf',\n      text: text.trim(),\n    },\n  };\n});"
+      },
+      "id": "819d8d11-5ad5-43eb-908c-193fc625af72",
+      "name": "Normalize PDF",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [100, 20]
+    },
+    {
+      "parameters": {
+        "operation": "xml",
+        "binaryPropertyName": "data",
+        "destinationKey": "xmlContent",
+        "options": {
+          "encoding": "utf8",
+          "stripBOM": true,
+          "keepSource": "json"
+        }
+      },
+      "id": "c05e3a40-a0c9-4d6a-b98b-b0233f3f4f26",
+      "name": "Extract XML to Text",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [-180, 260]
+    },
+    {
+      "parameters": {
+        "mode": "xmlToJson",
+        "dataPropertyName": "xmlContent",
+        "options": {
+          "explicitArray": false,
+          "explicitRoot": true,
+          "ignoreAttrs": true,
+          "mergeAttrs": false,
+          "normalize": false,
+          "normalizeTags": false,
+          "trim": true
+        }
+      },
+      "id": "fe0d3724-ee00-4bee-bb05-70fe5c26efb4",
+      "name": "Parse XML",
+      "type": "n8n-nodes-base.xml",
+      "typeVersion": 1,
+      "position": [80, 260]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const parsedItems = $input.all();\nconst sourceItems = $('Extract XML to Text').all();\n\nfunction collectReadableValues(value, output) {\n  if (value === null || value === undefined) return;\n\n  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {\n    const text = String(value).replace(/\\s+/g, ' ').trim();\n    if (text) output.push(text);\n    return;\n  }\n\n  if (Array.isArray(value)) {\n    for (const entry of value) collectReadableValues(entry, output);\n    return;\n  }\n\n  if (typeof value === 'object') {\n    for (const entry of Object.values(value)) collectReadableValues(entry, output);\n  }\n}\n\nreturn parsedItems.map((item, index) => {\n  const values = [];\n  collectReadableValues(item.json, values);\n  const source = sourceItems[index]?.json || {};\n\n  return {\n    json: {\n      filename: String(source.filename || source.fileName || ''),\n      extension: 'xml',\n      text: values.join('\\n').trim(),\n    },\n  };\n});"
+      },
+      "id": "502009cb-bbbe-43c4-a366-696212312edc",
+      "name": "Normalize XML",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [340, 260]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "return $input.all().map((item, index) => {\n  if (!item.binary?.data) {\n    throw new Error(`DOCX item ${index + 1} has no binary field named data`);\n  }\n\n  const originalFilename = String(\n    item.json.filename || item.json.fileName || item.binary.data.fileName || ''\n  );\n\n  return {\n    json: { ...item.json, filename: originalFilename, extension: 'docx' },\n    binary: {\n      ...item.binary,\n      data: {\n        ...item.binary.data,\n        fileExtension: 'zip',\n        mimeType: 'application/zip',\n      },\n    },\n    pairedItem: { item: index },\n  };\n});"
+      },
+      "id": "3d8776a4-742d-4b73-b676-b2bb5fabcd83",
+      "name": "Prepare DOCX as ZIP",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-180, 500]
+    },
+    {
+      "parameters": {
+        "operation": "decompress",
+        "binaryPropertyName": "data",
+        "outputPrefix": "file_"
+      },
+      "id": "69c01b17-b934-4203-ab8e-15b2ac6fdbdc",
+      "name": "Decompress DOCX",
+      "type": "n8n-nodes-base.compression",
+      "typeVersion": 1.1,
+      "position": [60, 500]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "return $input.all().map((item, index) => {\n  const documentXml = Object.entries(item.binary || {}).find(([, data]) => {\n    const directory = String(data.directory || '')\n      .replace(/\\\\/g, '/')\n      .replace(/^\\/+|\\/+$/g, '')\n      .toLowerCase();\n    const fileName = String(data.fileName || '')\n      .replace(/\\\\/g, '/')\n      .replace(/^\\/+|\\/+$/g, '')\n      .toLowerCase();\n\n    return directory === 'word' && fileName === 'document.xml';\n  });\n\n  if (!documentXml) {\n    throw new Error(\n      `word/document.xml was not found inside ${item.json.filename || `DOCX item ${index + 1}`}`\n    );\n  }\n\n  return {\n    json: item.json,\n    binary: { data: documentXml[1] },\n    pairedItem: { item: index },\n  };\n});"
+      },
+      "id": "ac6e80ee-3b86-40ed-8c3b-ea30ebda038d",
+      "name": "Select word document XML",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [300, 500]
+    },
+    {
+      "parameters": {
+        "operation": "xml",
+        "binaryPropertyName": "data",
+        "destinationKey": "xmlContent",
+        "options": {
+          "encoding": "utf8",
+          "stripBOM": true,
+          "keepSource": "json"
+        }
+      },
+      "id": "67207f0b-f760-416d-89eb-c91fda22cff1",
+      "name": "Extract DOCX XML to Text",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [540, 500]
+    },
+    {
+      "parameters": {
+        "mode": "xmlToJson",
+        "dataPropertyName": "xmlContent",
+        "options": {
+          "explicitArray": true,
+          "explicitRoot": true,
+          "ignoreAttrs": true,
+          "mergeAttrs": false,
+          "normalize": false,
+          "normalizeTags": false,
+          "trim": false
+        }
+      },
+      "id": "98232caf-b5ed-4420-a8a2-5679fd376836",
+      "name": "Parse DOCX XML",
+      "type": "n8n-nodes-base.xml",
+      "typeVersion": 1,
+      "position": [780, 500]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const parsedItems = $input.all();\nconst sourceItems = $('Extract DOCX XML to Text').all();\n\nfunction decodeXmlEntities(value) {\n  return value\n    .replace(/&#x([0-9a-f]+);/gi, (match, hex) => {\n      const code = parseInt(hex, 16);\n      return Number.isInteger(code) && code >= 0 && code <= 0x10FFFF\n        ? String.fromCodePoint(code)\n        : match;\n    })\n    .replace(/&#(\\d+);/g, (match, decimal) => {\n      const code = parseInt(decimal, 10);\n      return Number.isInteger(code) && code >= 0 && code <= 0x10FFFF\n        ? String.fromCodePoint(code)\n        : match;\n    })\n    .replace(/&lt;/g, '<')\n    .replace(/&gt;/g, '>')\n    .replace(/&quot;/g, '\"')\n    .replace(/&apos;/g, \"'\")\n    .replace(/&amp;/g, '&');\n}\n\nfunction docxXmlToText(xml) {\n  let text = String(xml || '');\n\n  text = text\n    .replace(/<w:tab\\b[^>]*\\/>/gi, '\\t')\n    .replace(/<w:(?:br|cr)\\b[^>]*\\/>/gi, '\\n')\n    .replace(/<\\/w:tc\\s*>/gi, '\\t')\n    .replace(/<\\/w:tr\\s*>/gi, '\\n')\n    .replace(/<\\/w:p\\s*>/gi, '\\n')\n    .replace(/<[^>]+>/g, '');\n\n  text = decodeXmlEntities(text);\n\n  return text\n    .replace(/\\r/g, '')\n    .replace(/[ \\t]+\\n/g, '\\n')\n    .replace(/\\n[ \\t]+/g, '\\n')\n    .replace(/[ \\t]{2,}/g, ' ')\n    .replace(/\\n{3,}/g, '\\n\\n')\n    .trim();\n}\n\nreturn parsedItems.map((item, index) => {\n  const source = sourceItems[index]?.json || {};\n\n  return {\n    json: {\n      filename: String(source.filename || source.fileName || ''),\n      extension: 'docx',\n      text: docxXmlToText(source.xmlContent),\n    },\n  };\n});"
+      },
+      "id": "99db947d-a5df-46f2-ac8b-80604481071e",
+      "name": "Normalize DOCX",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1020, 500]
+    },
+    {
+      "parameters": {
+        "operation": "read",
+        "fileSelector": "/home/node/.n8n-files/reference/Superpakkumus.docx",
+        "options": {
+          "dataPropertyName": "data"
+        }
+      },
+      "id": "15d57b49-d53e-4aa1-92fa-83b5ed462fa6",
+      "name": "Read Reference DOCX",
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [-940, 780]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "return $input.all().map((item, index) => {\n  if (!item.binary?.data) {\n    throw new Error(`Reference DOCX item ${index + 1} has no binary field named data`);\n  }\n\n  return {\n    json: item.json,\n    binary: {\n      ...item.binary,\n      data: {\n        ...item.binary.data,\n        fileExtension: 'zip',\n        mimeType: 'application/zip',\n      },\n    },\n    pairedItem: { item: index },\n  };\n});"
+      },
+      "id": "14c26ccf-65c5-42b3-99e8-9524a87f1baa",
+      "name": "Prepare Reference DOCX as ZIP",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-700, 780]
+    },
+    {
+      "parameters": {
+        "operation": "decompress",
+        "binaryPropertyName": "data",
+        "outputPrefix": "file_"
+      },
+      "id": "9894d65b-980f-42d7-b9f1-2c39b98c1f9f",
+      "name": "Decompress Reference DOCX",
+      "type": "n8n-nodes-base.compression",
+      "typeVersion": 1.1,
+      "position": [-460, 780]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "return $input.all().map((item, index) => {\n  const documentXml = Object.entries(item.binary || {}).find(([, data]) => {\n    const directory = String(data.directory || '')\n      .replace(/\\\\/g, '/')\n      .replace(/^\\/+|\\/+$/g, '')\n      .toLowerCase();\n    const fileName = String(data.fileName || '')\n      .replace(/\\\\/g, '/')\n      .replace(/^\\/+|\\/+$/g, '')\n      .toLowerCase();\n\n    return directory === 'word' && fileName === 'document.xml';\n  });\n\n  if (!documentXml) {\n    throw new Error(\n      `word/document.xml was not found inside ${item.json.fileName || `reference DOCX item ${index + 1}`}`\n    );\n  }\n\n  return {\n    json: item.json,\n    binary: { data: documentXml[1] },\n    pairedItem: { item: index },\n  };\n});"
+      },
+      "id": "e4ea3fef-551f-4aad-8402-72835f795393",
+      "name": "Select Reference word document XML",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-220, 780]
+    },
+    {
+      "parameters": {
+        "operation": "xml",
+        "binaryPropertyName": "data",
+        "destinationKey": "xmlContent",
+        "options": {
+          "encoding": "utf8",
+          "stripBOM": true,
+          "keepSource": "json"
+        }
+      },
+      "id": "a9243931-ddfd-4320-92c2-c84e3b5d479f",
+      "name": "Extract Reference DOCX XML to Text",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [20, 780]
+    },
+    {
+      "parameters": {
+        "mode": "xmlToJson",
+        "dataPropertyName": "xmlContent",
+        "options": {
+          "explicitArray": true,
+          "explicitRoot": true,
+          "ignoreAttrs": true,
+          "mergeAttrs": false,
+          "normalize": false,
+          "normalizeTags": false,
+          "trim": false
+        }
+      },
+      "id": "f88723ab-506f-478e-8863-fe38a118a1db",
+      "name": "Parse Reference DOCX XML",
+      "type": "n8n-nodes-base.xml",
+      "typeVersion": 1,
+      "position": [260, 780]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const parsedItems = $input.all();\nconst sourceItems = $('Extract Reference DOCX XML to Text').all();\n\nfunction decodeXmlEntities(value) {\n  return value\n    .replace(/&#x([0-9a-f]+);/gi, (match, hex) => {\n      const code = parseInt(hex, 16);\n      return Number.isInteger(code) && code >= 0 && code <= 0x10FFFF\n        ? String.fromCodePoint(code)\n        : match;\n    })\n    .replace(/&#(\\d+);/g, (match, decimal) => {\n      const code = parseInt(decimal, 10);\n      return Number.isInteger(code) && code >= 0 && code <= 0x10FFFF\n        ? String.fromCodePoint(code)\n        : match;\n    })\n    .replace(/&lt;/g, '<')\n    .replace(/&gt;/g, '>')\n    .replace(/&quot;/g, '\"')\n    .replace(/&apos;/g, \"'\")\n    .replace(/&amp;/g, '&');\n}\n\nfunction docxXmlToText(xml) {\n  let text = String(xml || '');\n\n  text = text\n    .replace(/<w:tab\\b[^>]*\\/>/gi, '\\t')\n    .replace(/<w:(?:br|cr)\\b[^>]*\\/>/gi, '\\n')\n    .replace(/<\\/w:tc\\s*>/gi, '\\t')\n    .replace(/<\\/w:tr\\s*>/gi, '\\n')\n    .replace(/<\\/w:p\\s*>/gi, '\\n')\n    .replace(/<[^>]+>/g, '');\n\n  text = decodeXmlEntities(text);\n\n  return text\n    .replace(/\\r/g, '')\n    .replace(/[ \\t]+\\n/g, '\\n')\n    .replace(/\\n[ \\t]+/g, '\\n')\n    .replace(/[ \\t]{2,}/g, ' ')\n    .replace(/\\n{3,}/g, '\\n\\n')\n    .trim();\n}\n\nreturn parsedItems.map((item, index) => {\n  const source = sourceItems[index]?.json || {};\n\n  return {\n    json: {\n      filename: 'Superpakkumus.docx',\n      type: 'reference',\n      text: docxXmlToText(source.xmlContent),\n    },\n  };\n});"
+      },
+      "id": "5c682907-5eed-456f-987e-4537c4e1a605",
+      "name": "Reference Context Output",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [500, 780]
+    },
+    {
+      "parameters": {
+        "mode": "append",
+        "numberInputs": 3
+      },
+      "id": "8523077f-51de-452f-b1a4-4de58d30186e",
+      "name": "Merge Documents",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [1280, 260]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "pakkumuse-pesa",
+        "authentication": "none",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "24f69c3e-5378-4ca4-a4b9-cd292c492d83",
+      "name": "Pakkumuse Pesa Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [-1160, 1040],
+      "webhookId": "a10b9ed6-9d2d-409e-bbc2-49737e4d1939"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const item = $input.first();\nconst body = item.json?.body;\nconst suppliedPrompt = typeof body?.prompt === 'string' ? body.prompt.trim() : '';\nconst defaultPrompt = 'Analyze the tender documents and produce the complete required structured JSON response.';\n\nreturn [{\n  json: {\n    prompt: suppliedPrompt || defaultPrompt,\n    isWebhook: body !== undefined && item.json?.headers !== undefined,\n  },\n}];"
+      },
+      "id": "62c54a6c-85dc-4dbe-a177-27817040f13f",
+      "name": "Capture Optional Prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-900, 1040]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const tenderDocuments = $input.all().map((item) => ({\n  filename: String(item.json.filename || ''),\n  extension: String(item.json.extension || ''),\n  text: String(item.json.text || ''),\n}));\n\nreturn [{ json: { tender_context: tenderDocuments } }];"
+      },
+      "id": "ba3df975-1f8c-4985-b714-a00c0554ca53",
+      "name": "Build Tender Context",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1510, 260]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const reference = $input.first().json;\n\nreturn [{\n  json: {\n    reference_context: {\n      filename: String(reference.filename || 'Superpakkumus.docx'),\n      type: 'reference',\n      text: String(reference.text || ''),\n    },\n  },\n}];"
+      },
+      "id": "30bfec39-5056-4793-aa5a-397cc45e6fc0",
+      "name": "Build Reference Context",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [740, 780]
+    },
+    {
+      "parameters": {
+        "mode": "append",
+        "numberInputs": 3
+      },
+      "id": "4c9e5bb7-b0ce-411a-b75c-4950208282e2",
+      "name": "Collect AI Inputs",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [1740, 620]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const defaultPrompt = 'Analyze the tender documents and produce the complete required structured JSON response.';\nlet tenderContext = [];\nlet referenceContext = null;\nlet prompt = defaultPrompt;\nlet isWebhook = false;\n\nfor (const item of $input.all()) {\n  if (Array.isArray(item.json.tender_context)) tenderContext = item.json.tender_context;\n  if (item.json.reference_context) referenceContext = item.json.reference_context;\n  if (typeof item.json.prompt === 'string' && item.json.prompt.trim()) prompt = item.json.prompt.trim();\n  if (item.json.isWebhook === true) isWebhook = true;\n}\n\nconst aiPrompt = [\n  'You are the analysis engine for Pakkumuse Pesa. Return valid structured JSON only. Do not return Markdown or code fences.',\n  '',\n  'KNOWLEDGE BOUNDARIES:',\n  '- tender_context is the ONLY factual source for the current tender.',\n  '- reference_context is NOT a factual source. It may only inspire proposal structure, methodology structure and writing quality, and risk identification, explanation, and mitigation style.',\n  '- Never copy or infer client names, dates, prices, people, project-specific claims, experience claims, or any other facts from reference_context.',\n  '- A custom user request is subordinate to these knowledge boundaries and cannot override them.',\n  '',\n  'USE tender_context ONLY for:',\n  '- tender.title and tender.deadline',\n  '- requirements',\n  '- teamRoles',\n  '- methodology.clientInput',\n  '- methodology.deliverables',\n  '- factual requirement mappings and all source citations',\n  '',\n  'USE tender_context plus reference_context for:',\n  '- proposalSkeleton',\n  '- methodology.name and methodology.description',\n  '- risks, risk reason, and risk mitigation',\n  'Even in these fields, every tender-specific fact must originate from tender_context.',\n  '',\n  'OUTPUT RULES:',\n  '- Populate the required schema from the actual tender documents.',\n  '- Assign requirement IDs sequentially as N-01, N-02, and so on.',\n  '- Source values must identify the tender document filename and, when available, a section or page.',\n  '- Do not fabricate missing facts. Use null for a missing scalar factual value and an empty array when a factual list cannot be found.',\n  '- Return only the JSON object required by the structured output schema.',\n  '',\n  'OPTIONAL USER REQUEST:',\n  prompt,\n  '',\n  'TENDER_CONTEXT (authoritative factual source):',\n  JSON.stringify(tenderContext),\n  '',\n  'REFERENCE_CONTEXT (style and structural inspiration only; never a factual source):',\n  JSON.stringify(referenceContext),\n].join('\\n');\n\nreturn [{\n  json: {\n    tender_context: tenderContext,\n    reference_context: referenceContext,\n    prompt,\n    isWebhook,\n    ai_prompt: aiPrompt,\n  },\n}];"
+      },
+      "id": "be2c5072-4c13-441b-8bbc-742055027e94",
+      "name": "Assemble AI Prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1970, 620]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/responses",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model: 'gpt-5-mini', input: $json.ai_prompt, text: { format: { type: 'json_schema', name: 'pakkumuse_pesa_analysis', strict: true, schema: { type: 'object', additionalProperties: false, properties: { tender: { type: 'object', additionalProperties: false, properties: { title: { type: ['string', 'null'] }, deadline: { type: ['string', 'null'] } }, required: ['title', 'deadline'] }, requirements: { type: 'array', items: { type: 'object', additionalProperties: false, properties: { id: { type: 'string' }, title: { type: ['string', 'null'] }, description: { type: ['string', 'null'] }, source: { type: ['string', 'null'] } }, required: ['id', 'title', 'description', 'source'] } }, proposalSkeleton: { type: 'array', items: { type: 'object', additionalProperties: false, properties: { title: { type: 'string' }, requirementIds: { type: 'array', items: { type: 'string' } } }, required: ['title', 'requirementIds'] } }, methodologies: { type: 'array', items: { type: 'object', additionalProperties: false, properties: { name: { type: 'string' }, description: { type: 'string' }, clientInput: { type: ['string', 'null'] }, deliverables: { type: 'array', items: { type: 'string' } }, requirementIds: { type: 'array', items: { type: 'string' } } }, required: ['name', 'description', 'clientInput', 'deliverables', 'requirementIds'] } }, teamRoles: { type: 'array', items: { type: 'object', additionalProperties: false, properties: { role: { type: ['string', 'null'] }, requirements: { type: ['string', 'null'] }, source: { type: ['string', 'null'] } }, required: ['role', 'requirements', 'source'] } }, risks: { type: 'array', items: { type: 'object', additionalProperties: false, properties: { title: { type: 'string' }, reason: { type: 'string' }, mitigation: { type: 'string' }, sources: { type: 'array', items: { type: 'string' } } }, required: ['title', 'reason', 'mitigation', 'sources'] } } }, required: ['tender', 'requirements', 'proposalSkeleton', 'methodologies', 'teamRoles', 'risks'] } } } }) }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          },
+          "timeout": 120000
+        }
+      },
+      "id": "079754ca-4fb5-4c7d-9365-bc095358b463",
+      "name": "Analyze Tender",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [2210, 620]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const response = $input.first().json;\n\nif (response.error) {\n  throw new Error(`OpenAI Responses API error: ${response.error.message || JSON.stringify(response.error)}`);\n}\n\nif (response.status && response.status !== 'completed') {\n  const detail = response.incomplete_details?.reason || response.status;\n  throw new Error(`OpenAI response was not completed: ${detail}`);\n}\n\nlet outputText = typeof response.output_text === 'string' ? response.output_text : '';\nlet refusal = '';\n\nif (!outputText && Array.isArray(response.output)) {\n  for (const outputItem of response.output) {\n    if (!Array.isArray(outputItem.content)) continue;\n    for (const contentItem of outputItem.content) {\n      if (contentItem.type === 'output_text' && typeof contentItem.text === 'string') {\n        outputText += contentItem.text;\n      } else if (contentItem.type === 'refusal' && typeof contentItem.refusal === 'string') {\n        refusal = contentItem.refusal;\n      }\n    }\n  }\n}\n\nif (!outputText) {\n  if (refusal) throw new Error(`OpenAI refused the request: ${refusal}`);\n  throw new Error('OpenAI Responses API returned no output_text content.');\n}\n\nconst cleaned = outputText.trim().replace(/^```(?:json)?\\s*/i, '').replace(/\\s*```$/, '');\nlet parsed;\ntry {\n  parsed = JSON.parse(cleaned);\n} catch (error) {\n  throw new Error(`OpenAI returned invalid JSON: ${error.message}`);\n}\n\nconst requiredKeys = ['tender', 'requirements', 'proposalSkeleton', 'methodologies', 'teamRoles', 'risks'];\nconst missingKeys = requiredKeys.filter((key) => !Object.prototype.hasOwnProperty.call(parsed, key));\nif (missingKeys.length) {\n  throw new Error(`OpenAI JSON is missing required fields: ${missingKeys.join(', ')}`);\n}\n\nreturn [{ json: parsed }];"
+      },
+      "id": "d04bd08c-ab0a-4833-a5a1-63d7bd8d8850",
+      "name": "Parse OpenAI Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2460, 620]
+    },
+    {
+      "parameters": {
+        "mode": "expression",
+        "numberOutputs": 2,
+        "output": "={{ $('Assemble AI Prompt').first().json.isWebhook ? 0 : 1 }}"
+      },
+      "id": "7fb3ea6a-c748-4c1b-8bad-274dcde6f1e3",
+      "name": "Route AI Response",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [2710, 620]
+    },
+    {
+      "parameters": {
+        "respondWith": "firstIncomingItem",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              }
+            ]
+          }
+        }
+      },
+      "id": "b5294052-1547-465f-b789-a6885bfdde75",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [2960, 540]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Manual Trigger": {
+      "main": [[
+        {"node": "Read All Supported Files", "type": "main", "index": 0},
+        {"node": "Read Reference DOCX", "type": "main", "index": 0},
+        {"node": "Capture Optional Prompt", "type": "main", "index": 0}
+      ]]
+    },
+    "Read All Supported Files": {
+      "main": [[{"node": "Detect Extension", "type": "main", "index": 0}]]
+    },
+    "Detect Extension": {
+      "main": [[{"node": "Switch by File Type", "type": "main", "index": 0}]]
+    },
+    "Switch by File Type": {
+      "main": [
+        [{"node": "Extract PDF", "type": "main", "index": 0}],
+        [{"node": "Extract XML to Text", "type": "main", "index": 0}],
+        [{"node": "Prepare DOCX as ZIP", "type": "main", "index": 0}]
+      ]
+    },
+    "Extract PDF": {
+      "main": [[{"node": "Normalize PDF", "type": "main", "index": 0}]]
+    },
+    "Normalize PDF": {
+      "main": [[{"node": "Merge Documents", "type": "main", "index": 0}]]
+    },
+    "Extract XML to Text": {
+      "main": [[{"node": "Parse XML", "type": "main", "index": 0}]]
+    },
+    "Parse XML": {
+      "main": [[{"node": "Normalize XML", "type": "main", "index": 0}]]
+    },
+    "Normalize XML": {
+      "main": [[{"node": "Merge Documents", "type": "main", "index": 1}]]
+    },
+    "Prepare DOCX as ZIP": {
+      "main": [[{"node": "Decompress DOCX", "type": "main", "index": 0}]]
+    },
+    "Decompress DOCX": {
+      "main": [[{"node": "Select word document XML", "type": "main", "index": 0}]]
+    },
+    "Select word document XML": {
+      "main": [[{"node": "Extract DOCX XML to Text", "type": "main", "index": 0}]]
+    },
+    "Extract DOCX XML to Text": {
+      "main": [[{"node": "Parse DOCX XML", "type": "main", "index": 0}]]
+    },
+    "Parse DOCX XML": {
+      "main": [[{"node": "Normalize DOCX", "type": "main", "index": 0}]]
+    },
+    "Normalize DOCX": {
+      "main": [[{"node": "Merge Documents", "type": "main", "index": 2}]]
+    },
+    "Read Reference DOCX": {
+      "main": [[{"node": "Prepare Reference DOCX as ZIP", "type": "main", "index": 0}]]
+    },
+    "Prepare Reference DOCX as ZIP": {
+      "main": [[{"node": "Decompress Reference DOCX", "type": "main", "index": 0}]]
+    },
+    "Decompress Reference DOCX": {
+      "main": [[{"node": "Select Reference word document XML", "type": "main", "index": 0}]]
+    },
+    "Select Reference word document XML": {
+      "main": [[{"node": "Extract Reference DOCX XML to Text", "type": "main", "index": 0}]]
+    },
+    "Extract Reference DOCX XML to Text": {
+      "main": [[{"node": "Parse Reference DOCX XML", "type": "main", "index": 0}]]
+    },
+    "Parse Reference DOCX XML": {
+      "main": [[{"node": "Reference Context Output", "type": "main", "index": 0}]]
+    },
+    "Pakkumuse Pesa Webhook": {
+      "main": [[
+        {"node": "Read All Supported Files", "type": "main", "index": 0},
+        {"node": "Read Reference DOCX", "type": "main", "index": 0},
+        {"node": "Capture Optional Prompt", "type": "main", "index": 0}
+      ]]
+    },
+    "Capture Optional Prompt": {
+      "main": [[{"node": "Collect AI Inputs", "type": "main", "index": 2}]]
+    },
+    "Merge Documents": {
+      "main": [[{"node": "Build Tender Context", "type": "main", "index": 0}]]
+    },
+    "Build Tender Context": {
+      "main": [[{"node": "Collect AI Inputs", "type": "main", "index": 0}]]
+    },
+    "Reference Context Output": {
+      "main": [[{"node": "Build Reference Context", "type": "main", "index": 0}]]
+    },
+    "Build Reference Context": {
+      "main": [[{"node": "Collect AI Inputs", "type": "main", "index": 1}]]
+    },
+    "Collect AI Inputs": {
+      "main": [[{"node": "Assemble AI Prompt", "type": "main", "index": 0}]]
+    },
+    "Assemble AI Prompt": {
+      "main": [[{"node": "Analyze Tender", "type": "main", "index": 0}]]
+    },
+    "Analyze Tender": {
+      "main": [[{"node": "Parse OpenAI Response", "type": "main", "index": 0}]]
+    },
+    "Parse OpenAI Response": {
+      "main": [[{"node": "Route AI Response", "type": "main", "index": 0}]]
+    },
+    "Route AI Response": {
+      "main": [
+        [{"node": "Respond to Webhook", "type": "main", "index": 0}],
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": []
+}

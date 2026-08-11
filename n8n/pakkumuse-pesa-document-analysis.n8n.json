@@ -1,0 +1,281 @@
+{
+  "name": "Pakkumuse Pesa - Document Analysis",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "69a2dcad-92c3-4657-baa8-5849ac525b33",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [-1160, 260]
+    },
+    {
+      "parameters": {
+        "operation": "read",
+        "fileSelector": "/home/node/.n8n/pakkumuse-pesa/testhange/HD/**/*.{pdf,docx,xml}",
+        "options": {
+          "dataPropertyName": "data"
+        }
+      },
+      "id": "cfc49c0a-6abc-44d0-9ce8-49cd21b034bb",
+      "name": "Read All Supported Files",
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [-940, 260]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const items = $input.all();\n\nreturn items.map((item, index) => {\n  const binaryData = item.binary?.data;\n  const filename = String(item.json.fileName || binaryData?.fileName || '');\n  const extension = String(\n    item.json.fileExtension ||\n    binaryData?.fileExtension ||\n    filename.split('.').pop() ||\n    ''\n  ).toLowerCase();\n\n  return {\n    json: { ...item.json, filename, extension },\n    binary: item.binary,\n    pairedItem: { item: index },\n  };\n});"
+      },
+      "id": "fe2492a1-d295-474a-93df-82e43cfd9876",
+      "name": "Detect Extension",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-700, 260]
+    },
+    {
+      "parameters": {
+        "mode": "expression",
+        "numberOutputs": 3,
+        "output": "={{ $json.extension === 'pdf' ? 0 : $json.extension === 'xml' ? 1 : 2 }}"
+      },
+      "id": "46977a0e-e14a-46ae-a883-d7cb2c574077",
+      "name": "Switch by File Type",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [-460, 260]
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "binaryPropertyName": "data",
+        "options": {
+          "joinPages": true,
+          "keepSource": "json",
+          "maxPages": 0
+        }
+      },
+      "id": "35223108-f6c6-4ec2-b0b7-a6ed672e25c4",
+      "name": "Extract PDF",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [-180, 20]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "return $input.all().map((item) => {\n  const value = item.json.text;\n  const text = Array.isArray(value) ? value.join('\\n') : String(value ?? '');\n\n  return {\n    json: {\n      filename: String(item.json.filename || item.json.fileName || ''),\n      extension: 'pdf',\n      text: text.trim(),\n    },\n  };\n});"
+      },
+      "id": "819d8d11-5ad5-43eb-908c-193fc625af72",
+      "name": "Normalize PDF",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [100, 20]
+    },
+    {
+      "parameters": {
+        "operation": "xml",
+        "binaryPropertyName": "data",
+        "destinationKey": "xmlContent",
+        "options": {
+          "encoding": "utf8",
+          "stripBOM": true,
+          "keepSource": "json"
+        }
+      },
+      "id": "c05e3a40-a0c9-4d6a-b98b-b0233f3f4f26",
+      "name": "Extract XML to Text",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [-180, 260]
+    },
+    {
+      "parameters": {
+        "mode": "xmlToJson",
+        "dataPropertyName": "xmlContent",
+        "options": {
+          "explicitArray": false,
+          "explicitRoot": true,
+          "ignoreAttrs": true,
+          "mergeAttrs": false,
+          "normalize": false,
+          "normalizeTags": false,
+          "trim": true
+        }
+      },
+      "id": "fe0d3724-ee00-4bee-bb05-70fe5c26efb4",
+      "name": "Parse XML",
+      "type": "n8n-nodes-base.xml",
+      "typeVersion": 1,
+      "position": [80, 260]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const parsedItems = $input.all();\nconst sourceItems = $('Extract XML to Text').all();\n\nfunction collectReadableValues(value, output) {\n  if (value === null || value === undefined) return;\n\n  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {\n    const text = String(value).replace(/\\s+/g, ' ').trim();\n    if (text) output.push(text);\n    return;\n  }\n\n  if (Array.isArray(value)) {\n    for (const entry of value) collectReadableValues(entry, output);\n    return;\n  }\n\n  if (typeof value === 'object') {\n    for (const entry of Object.values(value)) collectReadableValues(entry, output);\n  }\n}\n\nreturn parsedItems.map((item, index) => {\n  const values = [];\n  collectReadableValues(item.json, values);\n  const source = sourceItems[index]?.json || {};\n\n  return {\n    json: {\n      filename: String(source.filename || source.fileName || ''),\n      extension: 'xml',\n      text: values.join('\\n').trim(),\n    },\n  };\n});"
+      },
+      "id": "502009cb-bbbe-43c4-a366-696212312edc",
+      "name": "Normalize XML",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [340, 260]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "return $input.all().map((item, index) => {\n  if (!item.binary?.data) {\n    throw new Error(`DOCX item ${index + 1} has no binary field named data`);\n  }\n\n  const originalFilename = String(\n    item.json.filename || item.json.fileName || item.binary.data.fileName || ''\n  );\n\n  return {\n    json: { ...item.json, filename: originalFilename, extension: 'docx' },\n    binary: {\n      ...item.binary,\n      data: {\n        ...item.binary.data,\n        fileExtension: 'zip',\n        mimeType: 'application/zip',\n      },\n    },\n    pairedItem: { item: index },\n  };\n});"
+      },
+      "id": "3d8776a4-742d-4b73-b676-b2bb5fabcd83",
+      "name": "Prepare DOCX as ZIP",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-180, 500]
+    },
+    {
+      "parameters": {
+        "operation": "decompress",
+        "binaryPropertyName": "data",
+        "outputPrefix": "file_"
+      },
+      "id": "69c01b17-b934-4203-ab8e-15b2ac6fdbdc",
+      "name": "Decompress DOCX",
+      "type": "n8n-nodes-base.compression",
+      "typeVersion": 1.1,
+      "position": [60, 500]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "return $input.all().map((item, index) => {\n  const documentXml = Object.entries(item.binary || {}).find(([, data]) => {\n    const path = String(data.fileName || '').replace(/\\\\/g, '/').toLowerCase();\n    return path === 'word/document.xml';\n  });\n\n  if (!documentXml) {\n    throw new Error(\n      `word/document.xml was not found inside ${item.json.filename || `DOCX item ${index + 1}`}`\n    );\n  }\n\n  return {\n    json: { ...item.json, extension: 'docx' },\n    binary: { data: documentXml[1] },\n    pairedItem: { item: index },\n  };\n});"
+      },
+      "id": "ac6e80ee-3b86-40ed-8c3b-ea30ebda038d",
+      "name": "Select word document XML",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [300, 500]
+    },
+    {
+      "parameters": {
+        "operation": "xml",
+        "binaryPropertyName": "data",
+        "destinationKey": "xmlContent",
+        "options": {
+          "encoding": "utf8",
+          "stripBOM": true,
+          "keepSource": "json"
+        }
+      },
+      "id": "67207f0b-f760-416d-89eb-c91fda22cff1",
+      "name": "Extract DOCX XML to Text",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [540, 500]
+    },
+    {
+      "parameters": {
+        "mode": "xmlToJson",
+        "dataPropertyName": "xmlContent",
+        "options": {
+          "explicitArray": true,
+          "explicitRoot": true,
+          "ignoreAttrs": true,
+          "mergeAttrs": false,
+          "normalize": false,
+          "normalizeTags": false,
+          "trim": false
+        }
+      },
+      "id": "98232caf-b5ed-4420-a8a2-5679fd376836",
+      "name": "Parse DOCX XML",
+      "type": "n8n-nodes-base.xml",
+      "typeVersion": 1,
+      "position": [780, 500]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const parsedItems = $input.all();\nconst sourceItems = $('Extract DOCX XML to Text').all();\n\nfunction decodeXmlEntities(value) {\n  return value\n    .replace(/&#x([0-9a-f]+);/gi, (match, hex) => {\n      const code = parseInt(hex, 16);\n      return Number.isInteger(code) && code >= 0 && code <= 0x10FFFF\n        ? String.fromCodePoint(code)\n        : match;\n    })\n    .replace(/&#(\\d+);/g, (match, decimal) => {\n      const code = parseInt(decimal, 10);\n      return Number.isInteger(code) && code >= 0 && code <= 0x10FFFF\n        ? String.fromCodePoint(code)\n        : match;\n    })\n    .replace(/&lt;/g, '<')\n    .replace(/&gt;/g, '>')\n    .replace(/&quot;/g, '\"')\n    .replace(/&apos;/g, \"'\")\n    .replace(/&amp;/g, '&');\n}\n\nfunction docxXmlToText(xml) {\n  let text = String(xml || '');\n\n  text = text\n    .replace(/<w:tab\\b[^>]*\\/>/gi, '\\t')\n    .replace(/<w:(?:br|cr)\\b[^>]*\\/>/gi, '\\n')\n    .replace(/<\\/w:tc\\s*>/gi, '\\t')\n    .replace(/<\\/w:tr\\s*>/gi, '\\n')\n    .replace(/<\\/w:p\\s*>/gi, '\\n')\n    .replace(/<[^>]+>/g, '');\n\n  text = decodeXmlEntities(text);\n\n  return text\n    .replace(/\\r/g, '')\n    .replace(/[ \\t]+\\n/g, '\\n')\n    .replace(/\\n[ \\t]+/g, '\\n')\n    .replace(/[ \\t]{2,}/g, ' ')\n    .replace(/\\n{3,}/g, '\\n\\n')\n    .trim();\n}\n\nreturn parsedItems.map((item, index) => {\n  const source = sourceItems[index]?.json || {};\n\n  return {\n    json: {\n      filename: String(source.filename || source.fileName || ''),\n      extension: 'docx',\n      text: docxXmlToText(source.xmlContent),\n    },\n  };\n});"
+      },
+      "id": "99db947d-a5df-46f2-ac8b-80604481071e",
+      "name": "Normalize DOCX",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1020, 500]
+    },
+    {
+      "parameters": {
+        "mode": "append",
+        "numberInputs": 3
+      },
+      "id": "8523077f-51de-452f-b1a4-4de58d30186e",
+      "name": "Merge Documents",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [1280, 260]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Manual Trigger": {
+      "main": [[{"node": "Read All Supported Files", "type": "main", "index": 0}]]
+    },
+    "Read All Supported Files": {
+      "main": [[{"node": "Detect Extension", "type": "main", "index": 0}]]
+    },
+    "Detect Extension": {
+      "main": [[{"node": "Switch by File Type", "type": "main", "index": 0}]]
+    },
+    "Switch by File Type": {
+      "main": [
+        [{"node": "Extract PDF", "type": "main", "index": 0}],
+        [{"node": "Extract XML to Text", "type": "main", "index": 0}],
+        [{"node": "Prepare DOCX as ZIP", "type": "main", "index": 0}]
+      ]
+    },
+    "Extract PDF": {
+      "main": [[{"node": "Normalize PDF", "type": "main", "index": 0}]]
+    },
+    "Normalize PDF": {
+      "main": [[{"node": "Merge Documents", "type": "main", "index": 0}]]
+    },
+    "Extract XML to Text": {
+      "main": [[{"node": "Parse XML", "type": "main", "index": 0}]]
+    },
+    "Parse XML": {
+      "main": [[{"node": "Normalize XML", "type": "main", "index": 0}]]
+    },
+    "Normalize XML": {
+      "main": [[{"node": "Merge Documents", "type": "main", "index": 1}]]
+    },
+    "Prepare DOCX as ZIP": {
+      "main": [[{"node": "Decompress DOCX", "type": "main", "index": 0}]]
+    },
+    "Decompress DOCX": {
+      "main": [[{"node": "Select word document XML", "type": "main", "index": 0}]]
+    },
+    "Select word document XML": {
+      "main": [[{"node": "Extract DOCX XML to Text", "type": "main", "index": 0}]]
+    },
+    "Extract DOCX XML to Text": {
+      "main": [[{"node": "Parse DOCX XML", "type": "main", "index": 0}]]
+    },
+    "Parse DOCX XML": {
+      "main": [[{"node": "Normalize DOCX", "type": "main", "index": 0}]]
+    },
+    "Normalize DOCX": {
+      "main": [[{"node": "Merge Documents", "type": "main", "index": 2}]]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": []
+}
